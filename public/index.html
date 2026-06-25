@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>📚 Моя библиотека</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E📚%3C/text%3E%3C/svg%3E" />
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+  <header class="app-header">
+    <div class="container">
+      <h1>📚 Моя библиотека</h1>
+      <p class="subtitle">CRUD-приложение на Node.js + SQLite — добавляйте, ищите, редактируйте и удаляйте книги</p>
+      <div class="stats" id="stats"></div>
+    </div>
+  </header>
+
+  <main class="container">
+    <section class="toolbar">
+      <input id="search" type="search" class="input grow" placeholder="🔍 Поиск по названию, автору, заметкам…" />
+      <select id="filterStatus" class="input">
+        <option value="">Все статусы</option>
+        <option value="planned">В планах</option>
+        <option value="reading">Читаю</option>
+        <option value="read">Прочитано</option>
+      </select>
+      <select id="filterGenre" class="input">
+        <option value="">Все жанры</option>
+      </select>
+      <select id="sort" class="input">
+        <option value="created_desc">Сначала новые</option>
+        <option value="created_asc">Сначала старые</option>
+        <option value="title_asc">Название А→Я</option>
+        <option value="title_desc">Название Я→А</option>
+        <option value="rating_desc">Оценка ↓</option>
+        <option value="rating_asc">Оценка ↑</option>
+        <option value="year_desc">Год ↓</option>
+        <option value="year_asc">Год ↑</option>
+      </select>
+      <button id="addBtn" class="btn btn-primary">＋ Добавить книгу</button>
+      <button id="seedBtn" class="btn btn-ghost">✨ Заполнить примерами</button>
+      <button id="clearBtn" class="btn btn-danger-ghost">Очистить всё</button>
+    </section>
+
+    <section id="grid" class="grid"></section>
+
+    <div id="empty" class="empty hidden">
+      <div class="empty-icon">📖</div>
+      <h2>Здесь пока пусто</h2>
+      <p>Добавьте первую книгу или нажмите «Заполнить примерами».</p>
+    </div>
+  </main>
+
+  <!-- Модальное окно добавления/редактирования -->
+  <dialog id="dialog" class="dialog">
+    <form id="bookForm" novalidate>
+      <h2 id="dialogTitle">Новая книга</h2>
+
+      <label class="field">
+        <span>Название <b class="req">*</b></span>
+        <input id="f_title" type="text" class="input" maxlength="200" required placeholder="Например: Дюна" />
+      </label>
+
+      <div class="row">
+        <label class="field">
+          <span>Автор</span>
+          <input id="f_author" type="text" class="input" maxlength="120" placeholder="Фрэнк Герберт" />
+        </label>
+        <label class="field">
+          <span>Год</span>
+          <input id="f_year" type="number" class="input" min="0" max="3000" placeholder="1965" />
+        </label>
+      </div>
+
+      <div class="row">
+        <label class="field">
+          <span>Жанр</span>
+          <input id="f_genre" type="text" class="input" maxlength="60" list="genreList" placeholder="Фантастика" />
+          <datalist id="genreList"></datalist>
+        </label>
+        <label class="field">
+          <span>Статус</span>
+          <select id="f_status" class="input">
+            <option value="planned">В планах</option>
+            <option value="reading">Читаю</option>
+            <option value="read">Прочитано</option>
+          </select>
+        </label>
+      </div>
+
+      <div class="field">
+        <span>Оценка</span>
+        <div class="rating-row">
+          <div class="stars-input" id="ratingInput" data-value="0">
+            <button type="button" data-val="1" title="1">★</button>
+            <button type="button" data-val="2" title="2">★</button>
+            <button type="button" data-val="3" title="3">★</button>
+            <button type="button" data-val="4" title="4">★</button>
+            <button type="button" data-val="5" title="5">★</button>
+          </div>
+          <button type="button" id="ratingReset" class="link">сбросить</button>
+        </div>
+      </div>
+
+      <label class="field">
+        <span>Заметки</span>
+        <textarea id="f_notes" class="input" rows="3" maxlength="1000" placeholder="Ваши мысли о книге…"></textarea>
+      </label>
+
+      <div class="form-actions">
+        <button type="button" id="cancelBtn" class="btn btn-ghost">Отмена</button>
+        <button type="submit" class="btn btn-primary">Сохранить</button>
+      </div>
+    </form>
+  </dialog>
+
+  <div id="toasts" class="toasts"></div>
+
+  <script src="/app.js"></script>
+</body>
+</html>
