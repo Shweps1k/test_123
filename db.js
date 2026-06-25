@@ -31,10 +31,17 @@ db.exec(`
     rating     INTEGER NOT NULL DEFAULT 0,
     status     TEXT    NOT NULL DEFAULT 'planned',
     notes      TEXT    NOT NULL DEFAULT '',
+    cover_url  TEXT    NOT NULL DEFAULT '',
     created_at TEXT    NOT NULL DEFAULT (datetime('now')),
     updated_at TEXT    NOT NULL DEFAULT (datetime('now'))
   );
 `);
+
+// Миграция: добавляем колонку cover_url в уже существующие базы (если её там ещё нет).
+const cols = db.prepare('PRAGMA table_info(books)').all();
+if (!cols.some((c) => c.name === 'cover_url')) {
+  db.exec("ALTER TABLE books ADD COLUMN cover_url TEXT NOT NULL DEFAULT ''");
+}
 
 // Допустимые статусы прочтения.
 export const STATUSES = ['planned', 'reading', 'read'];
@@ -87,10 +94,10 @@ export function getBook(id) {
 export function createBook(b) {
   const info = db
     .prepare(
-      `INSERT INTO books (title, author, genre, year, rating, status, notes)
-       VALUES (?, ?, ?, ?, ?, ?, ?)`,
+      `INSERT INTO books (title, author, genre, year, rating, status, notes, cover_url)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
     )
-    .run(b.title, b.author, b.genre, b.year ?? null, b.rating, b.status, b.notes);
+    .run(b.title, b.author, b.genre, b.year ?? null, b.rating, b.status, b.notes, b.cover_url);
   return getBook(Number(info.lastInsertRowid));
 }
 
@@ -100,10 +107,10 @@ export function updateBook(id, b) {
   if (!getBook(id)) return null;
   db.prepare(
     `UPDATE books
-       SET title = ?, author = ?, genre = ?, year = ?, rating = ?, status = ?, notes = ?,
+       SET title = ?, author = ?, genre = ?, year = ?, rating = ?, status = ?, notes = ?, cover_url = ?,
            updated_at = datetime('now')
      WHERE id = ?`,
-  ).run(b.title, b.author, b.genre, b.year ?? null, b.rating, b.status, b.notes, id);
+  ).run(b.title, b.author, b.genre, b.year ?? null, b.rating, b.status, b.notes, b.cover_url, id);
   return getBook(id);
 }
 
@@ -146,12 +153,12 @@ export function stats() {
 // ---------- SEED (демо-данные) ----------
 
 const SEED = [
-  { title: 'Мастер и Маргарита', author: 'Михаил Булгаков', genre: 'Роман', year: 1967, rating: 5, status: 'read', notes: 'Любимая книга.' },
-  { title: '1984', author: 'Джордж Оруэлл', genre: 'Антиутопия', year: 1949, rating: 5, status: 'read', notes: 'Big Brother is watching you.' },
+  { title: 'Мастер и Маргарита', author: 'Михаил Булгаков', genre: 'Роман', year: 1967, rating: 5, status: 'read', notes: 'Любимая книга.', cover_url: 'https://covers.openlibrary.org/b/isbn/9780143108276-L.jpg' },
+  { title: '1984', author: 'Джордж Оруэлл', genre: 'Антиутопия', year: 1949, rating: 5, status: 'read', notes: 'Big Brother is watching you.', cover_url: 'https://covers.openlibrary.org/b/isbn/9780451524935-L.jpg' },
   { title: 'Преступление и наказание', author: 'Фёдор Достоевский', genre: 'Классика', year: 1866, rating: 4, status: 'read', notes: '' },
-  { title: 'Дюна', author: 'Фрэнк Герберт', genre: 'Фантастика', year: 1965, rating: 5, status: 'reading', notes: 'Перечитываю перед фильмом.' },
-  { title: 'Хоббит', author: 'Дж. Р. Р. Толкин', genre: 'Фэнтези', year: 1937, rating: 5, status: 'read', notes: '' },
-  { title: 'Гарри Поттер и философский камень', author: 'Дж. К. Роулинг', genre: 'Фэнтези', year: 1997, rating: 4, status: 'read', notes: '' },
+  { title: 'Дюна', author: 'Фрэнк Герберт', genre: 'Фантастика', year: 1965, rating: 5, status: 'reading', notes: 'Перечитываю перед фильмом.', cover_url: 'https://covers.openlibrary.org/b/isbn/9780441013593-L.jpg' },
+  { title: 'Хоббит', author: 'Дж. Р. Р. Толкин', genre: 'Фэнтези', year: 1937, rating: 5, status: 'read', notes: '', cover_url: 'https://covers.openlibrary.org/b/isbn/9780547928227-L.jpg' },
+  { title: 'Гарри Поттер и философский камень', author: 'Дж. К. Роулинг', genre: 'Фэнтези', year: 1997, rating: 4, status: 'read', notes: '', cover_url: 'https://covers.openlibrary.org/b/isbn/9780747532699-L.jpg' },
   { title: 'Три товарища', author: 'Эрих Мария Ремарк', genre: 'Роман', year: 1936, rating: 5, status: 'planned', notes: 'Советовали друзья.' },
   { title: 'Сто лет одиночества', author: 'Габриэль Гарсиа Маркес', genre: 'Магический реализм', year: 1967, rating: 4, status: 'planned', notes: '' },
   { title: 'Краткая история времени', author: 'Стивен Хокинг', genre: 'Научпоп', year: 1988, rating: 4, status: 'reading', notes: 'О чёрных дырах и времени.' },
@@ -162,13 +169,13 @@ const SEED = [
 export function seed() {
   const exists = db.prepare('SELECT 1 FROM books WHERE title = ? LIMIT 1');
   const insert = db.prepare(
-    `INSERT INTO books (title, author, genre, year, rating, status, notes)
-     VALUES (?, ?, ?, ?, ?, ?, ?)`,
+    `INSERT INTO books (title, author, genre, year, rating, status, notes, cover_url)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
   );
   let inserted = 0;
   for (const b of SEED) {
     if (!exists.get(b.title)) {
-      insert.run(b.title, b.author, b.genre, b.year, b.rating, b.status, b.notes);
+      insert.run(b.title, b.author, b.genre, b.year, b.rating, b.status, b.notes, b.cover_url ?? '');
       inserted++;
     }
   }

@@ -24,6 +24,7 @@ const fGenre = document.getElementById('f_genre');
 const fYear = document.getElementById('f_year');
 const fStatus = document.getElementById('f_status');
 const fNotes = document.getElementById('f_notes');
+const fCover = document.getElementById('f_cover');
 
 let editingId = null; // id редактируемой книги или null для новой
 
@@ -103,18 +104,22 @@ function render(books) {
     .map(
       (b) => `
     <article class="card" data-id="${b.id}">
-      <div class="card-top">
-        <span class="badge badge-${b.status}">${STATUS_LABELS[b.status] || b.status}</span>
-        ${b.year ? `<span class="year">${b.year}</span>` : ''}
+      <div class="cover">
+        <span class="cover-ph">📚</span>
+        ${b.cover_url ? `<img class="cover-img" src="${esc(b.cover_url)}" alt="" loading="lazy" onerror="this.remove()">` : ''}
+        <span class="badge badge-${b.status} cover-badge">${STATUS_LABELS[b.status] || b.status}</span>
+        ${b.year ? `<span class="cover-year">${b.year}</span>` : ''}
       </div>
-      <h3 class="card-title">${esc(b.title)}</h3>
-      <p class="card-author">${esc(b.author) || '—'}</p>
-      ${b.genre ? `<span class="genre-chip">${esc(b.genre)}</span>` : ''}
-      ${starsHtml(b.rating)}
-      ${b.notes ? `<p class="card-notes">${esc(b.notes)}</p>` : ''}
-      <div class="card-actions">
-        <button class="btn btn-sm btn-edit" data-act="edit">✏️ Изменить</button>
-        <button class="btn btn-sm btn-del" data-act="delete">🗑 Удалить</button>
+      <div class="card-body">
+        <h3 class="card-title">${esc(b.title)}</h3>
+        <p class="card-author">${esc(b.author) || '—'}</p>
+        ${b.genre ? `<span class="genre-chip">${esc(b.genre)}</span>` : ''}
+        ${starsHtml(b.rating)}
+        ${b.notes ? `<p class="card-notes">${esc(b.notes)}</p>` : ''}
+        <div class="card-actions">
+          <button class="btn btn-sm btn-edit" data-act="edit">✏️ Изменить</button>
+          <button class="btn btn-sm btn-del" data-act="delete">🗑 Удалить</button>
+        </div>
       </div>
     </article>`,
     )
@@ -143,6 +148,7 @@ function openDialog(book) {
   fYear.value = book?.year ?? '';
   fStatus.value = book?.status ?? 'planned';
   fNotes.value = book?.notes ?? '';
+  fCover.value = book?.cover_url ?? '';
   setFormRating(book?.rating ?? 0);
   dialog.showModal();
   fTitle.focus();
@@ -175,6 +181,7 @@ form.addEventListener('submit', async (e) => {
     year: fYear.value,
     status: fStatus.value,
     notes: fNotes.value.trim(),
+    cover_url: fCover.value.trim(),
     rating: Number(ratingInput.dataset.value || 0),
   };
   if (!payload.title) {

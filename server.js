@@ -56,6 +56,11 @@ function validateBook(body) {
   value.genre = String(body.genre ?? '').trim();
   value.notes = String(body.notes ?? '').trim();
 
+  value.cover_url = String(body.cover_url ?? '').trim();
+  if (value.cover_url && !/^https?:\/\//i.test(value.cover_url)) {
+    errors.push('Ссылка на обложку должна начинаться с http:// или https://');
+  }
+
   if (body.year === '' || body.year === null || body.year === undefined) {
     value.year = null;
   } else {
